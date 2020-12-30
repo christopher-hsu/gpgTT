@@ -121,6 +121,7 @@ class setTrackingEnvGPG(maTrackingBase):
             self.nb_agents = 4#np.random.random_integers(1, self.num_agents)
             self.nb_targets = 4#np.random.random_integers(1, self.num_targets)
         obs_dict = {}
+        obs = []
         self.greedy_dict = {}   #dict to see which target is assigned to which agent
         self.graph_x = []
         init_pose = self.get_init_pose(**kwargs)
@@ -159,8 +160,11 @@ class setTrackingEnvGPG(maTrackingBase):
                 obs_dict[agent_id] = obs_dict[agent_id][None,self.greedy_dict[agent_id]]
                 mask[self.greedy_dict[agent_id]] = False
             self.graph_x.append(obs_dict[agent_id][:,:2])
+            obs.append(obs_dict[agent_id])
         self.graph_x = np.squeeze(np.asarray(self.graph_x))
-        return obs_dict
+        obs = np.squeeze(np.asarray(obs))
+        # return obs_dict
+        return obs
 
     def step(self, action_dict):
         obs_dict = {}

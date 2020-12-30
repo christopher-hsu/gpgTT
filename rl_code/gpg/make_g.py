@@ -15,7 +15,6 @@ def build_graph(env):
 	
 	g.add_nodes(num_ag)
 	adj_matrix = env.get_connectivity(env.x)
-	pdb.set_trace()
 	edge_list = []
 	for i in range(0,num_ag):
 		for j in range(0,num_ag):

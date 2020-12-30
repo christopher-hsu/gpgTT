@@ -45,7 +45,6 @@ def main(episodes):
 	for episode in range(episodes):
 		reward_over_eps = []
 		state = env.reset() # Reset environment and record the starting state
-		pdb.set_trace()
 		g = build_graph(env)
 		done = False
 

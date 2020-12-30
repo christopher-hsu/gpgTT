@@ -31,7 +31,7 @@ import datetime
 import envs
 env = envs.make('setTracking-vGPG',
 				'ma_target_tracking',
-				render=bool(0),
+				render=bool(1),
 				record=bool(0),
 				directory='',
 				ros=bool(0),
@@ -71,23 +71,23 @@ def main(episodes):
 		for time in range(200):
 
 			#if episode%50==0:
-			#	env.render()
+			# env.render()
 			#g = build_graph(env)
 			action = select_action(state,g,policy)
-			pdb.set_trace()
 			action = action.numpy()
-			action = np.reshape(action,[-1])
+			# action = np.reshape(action,[-1])
 
 			# Step through environment using chosen action
-			action = np.clip(action,-env.max_accel,env.max_accel)
+			# action = np.clip(action,-env.max_accel,env.max_accel)
 
 			state, reward, done, _ = env.step(action)
-			pdb.set_trace()
-			reward_over_eps.append(reward)
+
+			reward_over_eps.append(reward['__all__'])
 			# Save reward
-			policy.reward_episode.append(reward)
-			if done:
+			policy.reward_episode.append(reward['__all__'])
+			if done['__all__']:
 				break
+
 
 		# Used to determine when the environment is solved.
 		running_reward = (running_reward * 0.99) + (time * 0.01)

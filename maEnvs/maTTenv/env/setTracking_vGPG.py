@@ -24,8 +24,11 @@ o_d : linear distance to the closet obstacle point
 o_alpha : angular distance to the closet obstacle point
 
 [Environment Description]
+made for Graph Policy Gradients
 Varying number of agents, varying number of randomly moving targets
 No obstacles
+greedy target assignment
+continuous actions
 
 setTrackingEnv0 : Double Integrator Target model with KF belief tracker
     obs state: [d, alpha, ddot, alphadot, logdet(Sigma), observed, o_d, o_alpha] *nb_targets
@@ -59,6 +62,12 @@ class setTrackingEnvGPG(maTrackingBase):
         self.limit['state'] = [np.concatenate(([0.0, -np.pi, -rel_vel_limit, -10*np.pi, -50.0, 0.0], [0.0, -np.pi ])),
                                np.concatenate(([600.0, np.pi, rel_vel_limit, 10*np.pi,  50.0, 2.0], [self.sensor_r, np.pi]))]
         self.observation_space = spaces.Box(self.limit['state'][0], self.limit['state'][1], dtype=np.float32)
+
+        a_vel_lim = 2.0
+        a_ang_lim = np.pi/2
+        self.limit['action'] = [np.array([0.0, -a_ang_lim]), np.array([a_vel_lim, a_ang_lim])]
+        self.action_space = spaces.Box(self.limit['action'][0], self.limit['action'][1], dtype=np.float32)
+
         self.targetA = np.concatenate((np.concatenate((np.eye(2), self.sampling_period*np.eye(2)), axis=1), 
                                         [[0,0,1,0],[0,0,0,1]]))
         self.target_noise_cov = METADATA['const_q'] * np.concatenate((
@@ -121,7 +130,7 @@ class setTrackingEnvGPG(maTrackingBase):
             self.nb_agents = 4#np.random.random_integers(1, self.num_agents)
             self.nb_targets = 4#np.random.random_integers(1, self.num_targets)
         obs_dict = {}
-        obs = []
+        state = []
         self.greedy_dict = {}   #dict to see which target is assigned to which agent
         self.graph_x = []
         init_pose = self.get_init_pose(**kwargs)
@@ -160,17 +169,24 @@ class setTrackingEnvGPG(maTrackingBase):
                 obs_dict[agent_id] = obs_dict[agent_id][None,self.greedy_dict[agent_id]]
                 mask[self.greedy_dict[agent_id]] = False
             self.graph_x.append(obs_dict[agent_id][:,:2])
-            obs.append(obs_dict[agent_id])
+            state.append(obs_dict[agent_id])
         self.graph_x = np.squeeze(np.asarray(self.graph_x))
-        obs = np.squeeze(np.asarray(obs))
+        state = np.squeeze(np.asarray(state))
         # return obs_dict
-        return obs
+        return state
 
-    def step(self, action_dict):
+    def step(self, action):
         obs_dict = {}
+        state = []
         reward_dict = {}
         done_dict = {'__all__':False}
         info_dict = {}
+        action_dict = {}
+
+        # clip actions into vel and angvel limits and put into dict
+        action = np.clip(action, self.limit['action'][0], self.limit['action'][1])
+        for ii in range(self.nb_agents):
+            action_dict[self.agents[ii].agent_id] = action[ii]
 
         # Targets move (t -> t+1)
         for n in range(self.nb_targets):
@@ -182,14 +198,14 @@ class setTrackingEnvGPG(maTrackingBase):
             reward_dict[self.agents[ii].agent_id] = []
             done_dict[self.agents[ii].agent_id] = []
 
-            action_vw = self.action_map[action_dict[agent_id]]
+            # action_vw = self.action_map[action_dict[agent_id]]
 
             # Locations of all targets and agents in order to maintain a margin between them
             margin_pos = [t.state[:2] for t in self.targets[:self.nb_targets]]
             for p, ids in enumerate(action_dict):
                 if agent_id != ids:
                     margin_pos.append(np.array(self.agents[p].state[:2]))
-            _ = self.agents[ii].update(action_vw, margin_pos)
+            _ = self.agents[ii].update(action_dict[agent_id], margin_pos)
             
             # Target and map observations
             observed = np.zeros(self.nb_targets, dtype=bool)
@@ -212,17 +228,23 @@ class setTrackingEnvGPG(maTrackingBase):
                                         self.belief_targets[jj].state[:2],
                                         self.belief_targets[jj].state[2:],
                                         self.agents[ii].state[:2], self.agents[ii].state[-1],
-                                        action_vw[0], action_vw[1])
+                                        action_dict[agent_id][0], action_dict[agent_id][1])
                 obs_dict[agent_id].append([r_b, alpha_b, r_dot_b, alpha_dot_b,
                                         np.log(LA.det(self.belief_targets[jj].cov)), 
                                         float(obs), obstacles_pt[0], obstacles_pt[1]])
             obs_dict[agent_id] = np.asarray(obs_dict[agent_id])
-            # shuffle obs to promote permutation invariance
-            self.rng.shuffle(obs_dict[agent_id])
+
+        # Assign target
+        for agent_id in obs_dict:
+            obs_dict[agent_id] = np.asarray(obs_dict[agent_id])
+            obs_dict[agent_id] = obs_dict[agent_id][None,self.greedy_dict[agent_id]]
+            state.append(obs_dict[agent_id])
+        state = np.squeeze(np.asarray(state))
         # Get all rewards after all agents and targets move (t -> t+1)
         reward, done, mean_nlogdetcov = self.get_reward(obstacles_pt, observed, self.is_training)
         reward_dict['__all__'], done_dict['__all__'], info_dict['mean_nlogdetcov'] = reward, done, mean_nlogdetcov
-        return obs_dict, reward_dict, done_dict, info_dict
+        # return obs_dict, reward_dict, done_dict, info_dict
+        return state, reward_dict, done_dict, info_dict
 
     ## Graph Policy Gradient related functions
 

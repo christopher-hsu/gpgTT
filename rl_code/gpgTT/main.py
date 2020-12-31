@@ -26,6 +26,11 @@ from utils import *
 
 import os
 import datetime
+from torch.utils.tensorboard import SummaryWriter
+
+import warnings
+warnings.filterwarnings('ignore')
+warnings.simplefilter('ignore')
 
 ## maEnvs
 import envs
@@ -51,11 +56,15 @@ optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 if not os.path.exists('./logs'):
 	os.makedirs('./logs')
 
-filename = str(datetime.datetime.now())+str('_%dagents_fixed_fcnpolicy'%env.nb_agents)
-filename = filename+str('.pt')
-torch.save(policy.state_dict(),'./logs/%s'%filename)
+filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+str('_%da%dt'%(env.nb_agents,env.nb_targets))
+savedir = str('./logs/%s'%filename)
 
+if not os.path.exists(savedir):
+	os.makedirs(savedir)
 
+torch.save(policy.state_dict(), savedir+'/model.pt')
+
+writer = SummaryWriter(savedir)
 
 
 def main(episodes):
@@ -63,7 +72,7 @@ def main(episodes):
 	plotting_rew = []
 
 	for episode in range(episodes):
-		reward_over_eps = []
+		reward_over_eps = 0
 		state = env.reset() # Reset environment and record the starting state
 		g = build_graph(env)
 		done = False
@@ -80,9 +89,11 @@ def main(episodes):
 			# Step through environment using chosen action
 			# action = np.clip(action,-env.max_accel,env.max_accel)
 
-			state, reward, done, _ = env.step(action)
+			state, reward, done, info = env.step(action)
 
-			reward_over_eps.append(reward['__all__'])
+			# reward_over_eps.append(reward['__all__'])
+			reward_over_eps += reward['__all__']
+
 			# Save reward
 			policy.reward_episode.append(reward['__all__'])
 			if done['__all__']:
@@ -90,25 +101,34 @@ def main(episodes):
 
 
 		# Used to determine when the environment is solved.
-		running_reward = (running_reward * 0.99) + (time * 0.01)
+		# running_reward = (running_reward * 0.99) + (time * 0.01)
 
 		update_policy(policy,optimizer)
 
-		if episode % 50 == 0:
-			print('Episode {}\tLast length: {:5d}\tAverage running reward: {:.2f}\tAverage reward over episode: {:.2f}'.format(episode, time, running_reward, np.mean(reward_over_eps)))
+		# if episode % 50 == 0:
+			# print('Episode {}\tLast length: {:5d}\tAverage running reward: {:.2f}\tAverage reward over episode: {:.2f}'.format(episode, time, running_reward, np.mean(reward_over_eps)))
 
 		if episode % 5000 == 0 :
-			torch.save(policy.state_dict(),'./logs/%s'%filename)
+			torch.save(policy.state_dict(), savedir+'/model.pt')
 
 
-		plotting_rew.append(np.mean(reward_over_eps))
+		# plotting_rew.append(np.mean(reward_over_eps))
+
+		# Tensorboard logger
+
+		writer.add_scalar('rewards', reward_over_eps, episode)
+		writer.add_scalar('loss', policy.loss_history[-1], episode)
+
+
+
+
 	#pdb.set_trace()
-	np.savetxt('Relative_Goal_Reaching_for_%d_agents_rs_rg.txt' %(env.n_agents), plotting_rew)
-	fig = plt.figure()
-	x = np.linspace(0,len(plotting_rew),len(plotting_rew))
-	plt.plot(x,plotting_rew)
-	plt.savefig('Relative_Goal_Reaching_for_%d_agents_rs_rg.png' %(env.n_agents))
-	plt.show()
+	# np.savetxt('Relative_Goal_Reaching_for_%d_agents_rs_rg.txt' %(env.n_agents), plotting_rew)
+	# fig = plt.figure()
+	# x = np.linspace(0,len(plotting_rew),len(plotting_rew))
+	# plt.plot(x,plotting_rew)
+	# plt.savefig('Relative_Goal_Reaching_for_%d_agents_rs_rg.png' %(env.n_agents))
+	# plt.show()
 
 	#pdb.set_trace()
 

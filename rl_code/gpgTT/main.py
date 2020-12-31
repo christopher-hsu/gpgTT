@@ -105,8 +105,8 @@ def main(episodes):
 
 		update_policy(policy,optimizer)
 
-		# if episode % 50 == 0:
-			# print('Episode {}\tLast length: {:5d}\tAverage running reward: {:.2f}\tAverage reward over episode: {:.2f}'.format(episode, time, running_reward, np.mean(reward_over_eps)))
+		if episode % 500 == 0:
+			print('Episode {}\tAverage reward over episode: {:.2f}'.format(episode, reward_over_eps))
 
 		if episode % 5000 == 0 :
 			torch.save(policy.state_dict(), savedir+'/model.pt')

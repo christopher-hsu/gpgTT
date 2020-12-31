@@ -36,7 +36,7 @@ warnings.simplefilter('ignore')
 import envs
 env = envs.make('setTracking-vGPG',
 				'ma_target_tracking',
-				render=bool(1),
+				render=bool(0),
 				record=bool(0),
 				directory='',
 				ros=bool(0),

@@ -82,6 +82,7 @@ class Net(nn.Module):
 		# Overall reward and loss history
 		self.reward_history = []
 		self.loss_history = []
+		self.lr_history = []
 		self.gamma = 0.99
 
 	def forward(self, g, features):

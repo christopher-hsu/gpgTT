@@ -79,8 +79,8 @@ writer = SummaryWriter(savedir)
 
 def main(episodes):
 
-    torch.manual_seed(args.seed)
-    np.random.seed(args.seed)
+	torch.manual_seed(args.seed)
+	np.random.seed(args.seed)
 
 	running_reward = 10
 	plotting_rew = []

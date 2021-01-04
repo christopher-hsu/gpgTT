@@ -127,8 +127,8 @@ class setTrackingEnvGPG(maTrackingBase):
             self.nb_agents = kwargs['nb_agents']
             self.nb_targets = kwargs['nb_targets']
         except:
-            self.nb_agents = 4#np.random.random_integers(1, self.num_agents)
-            self.nb_targets = 4#np.random.random_integers(1, self.num_targets)
+            self.nb_agents = np.random.random_integers(2, self.num_agents)
+            self.nb_targets = np.random.random_integers(1, self.num_targets)
         obs_dict = {}
         state = []
         self.greedy_dict = {}   #dict to see which target is assigned to which agent
@@ -250,17 +250,16 @@ class setTrackingEnvGPG(maTrackingBase):
 
     def dist2_mat(self, x):
 
-        x_loc = np.reshape(x[:, 0:2], (self.n_agents,2,1))
+        x_loc = np.reshape(x[:, 0:2], (self.nb_agents,2,1))
         a_net = np.sum(np.square(np.transpose(x_loc, (0,2,1)) - np.transpose(x_loc, (2,0,1))), axis=2)
         np.fill_diagonal(a_net, np.Inf)
         return a_net
 
     def get_connectivity(self, x):
 
-
         # if self.degree == 0:
-        #     a_net = self.dist2_mat(x)
-        #     a_net = (a_net < self.comm_radius2).astype(float)
+            # a_net = self.dist2_mat(x)
+            # a_net = (a_net < self.comm_radius2).astype(float)
         # else:
         neigh = NearestNeighbors(n_neighbors=self.n_neighbors)
         # neigh.fit(x[:,2:4])

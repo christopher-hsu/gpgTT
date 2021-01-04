@@ -57,7 +57,7 @@ def select_action(state,g,policy):
 	return action
 
 
-def update_policy(policy,optimizer):
+def update_policy(policy,optimizer,lr_iter):
 
 	R = 0
 	rewards = []
@@ -73,13 +73,18 @@ def update_policy(policy,optimizer):
 	# Calculate loss
 	loss = (torch.sum(torch.mul(policy.policy_history, Variable(rewards)).mul(-1), -1))
 	#pdb.set_trace()
+
+	#Update lr rate
+	lr = 0.001*np.cos(np.pi/(2*10000000)*lr_iter)
+	optimizer.param_groups[0]['lr'] = lr
+
 	# Update network weights
 	optimizer.zero_grad()
 	loss.backward()
 	optimizer.step()
 
 	#Save and intialize episode history counters
-
+	policy.lr_history.append(lr)
 	policy.loss_history.append(loss.item())
 	policy.reward_history.append(np.sum(policy.reward_episode))
 	policy.policy_history = Variable(torch.Tensor())

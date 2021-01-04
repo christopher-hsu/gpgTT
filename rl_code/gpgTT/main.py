@@ -41,6 +41,10 @@ parser.add_argument('--seed', help='RNG seed', type=int, default=0)
 args = parser.parse_args()
 
 
+torch_threads=1
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+torch.set_num_threads(torch_threads)
+
 ## maEnvs
 import envs
 env = envs.make('setTracking-vGPG',
@@ -55,7 +59,7 @@ env = envs.make('setTracking-vGPG',
 				is_training=True,
 				)
 
-policy = Net()
+policy = Net()#.to(device)
 optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 # env = gym.make('FormationFlying-v3')
 
@@ -80,6 +84,7 @@ def main(episodes):
 
 	running_reward = 10
 	plotting_rew = []
+	lr_iter = 0
 
 	for episode in range(episodes):
 		reward_over_eps = 0
@@ -106,6 +111,9 @@ def main(episodes):
 
 			# Save reward
 			policy.reward_episode.append(reward['__all__'])
+
+			lr_iter += 1
+
 			if done['__all__']:
 				break
 
@@ -113,7 +121,7 @@ def main(episodes):
 		# Used to determine when the environment is solved.
 		# running_reward = (running_reward * 0.99) + (time * 0.01)
 
-		update_policy(policy,optimizer)
+		update_policy(policy,optimizer, lr_iter)
 
 		if episode % 500 == 0:
 			print('Episode {}\tAverage reward over episode: {:.2f}'.format(episode, reward_over_eps))
@@ -128,6 +136,7 @@ def main(episodes):
 
 		writer.add_scalar('rewards', reward_over_eps, episode)
 		writer.add_scalar('loss', policy.loss_history[-1], episode)
+		writer.add_scalar('lr', policy.lr_history[-1],episode)
 
 
 

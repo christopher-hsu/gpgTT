@@ -11,7 +11,7 @@ import torch.optim as optim
 import dgl
 import dgl.function as fn
 import math
-import pdb
+import pdb, argparse
 
 from torch.autograd import Variable
 from torch.distributions import Categorical
@@ -32,6 +32,15 @@ import warnings
 warnings.filterwarnings('ignore')
 warnings.simplefilter('ignore')
 
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument('--map', type=str, default="emptyMed")
+parser.add_argument('--nb_agents', type=int, default=4)
+parser.add_argument('--nb_targets', type=int, default=4)
+parser.add_argument('--seed', help='RNG seed', type=int, default=0)
+
+args = parser.parse_args()
+
+
 ## maEnvs
 import envs
 env = envs.make('setTracking-vGPG',
@@ -40,14 +49,11 @@ env = envs.make('setTracking-vGPG',
 				record=bool(0),
 				directory='',
 				ros=bool(0),
-				map_name='emptyMed',
-				num_agents=4,
-				num_targets=4,
+				map_name=args.map,
+				num_agents=args.nb_agents,
+				num_targets=args.nb_targets,
 				is_training=True,
 				)
-# Create env function
-env_fn = lambda : env
-
 
 policy = Net()
 optimizer = optim.Adam(policy.parameters(), lr=1e-3)
@@ -56,7 +62,7 @@ optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 if not os.path.exists('./logs'):
 	os.makedirs('./logs')
 
-filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+str('_%da%dt'%(env.nb_agents,env.nb_targets))
+filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+str('_%da%dt_seed%d'%(env.nb_agents,env.nb_targets,args.seed))
 savedir = str('./logs/%s'%filename)
 
 if not os.path.exists(savedir):
@@ -68,6 +74,10 @@ writer = SummaryWriter(savedir)
 
 
 def main(episodes):
+
+    torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
+
 	running_reward = 10
 	plotting_rew = []
 

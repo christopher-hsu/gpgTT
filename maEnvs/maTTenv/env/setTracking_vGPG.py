@@ -168,7 +168,8 @@ class setTrackingEnvGPG(maTrackingBase):
                 self.greedy_dict[agent_id] = idx[np.argmin(obs_dict[agent_id][:,0][mask])]
                 obs_dict[agent_id] = obs_dict[agent_id][None,self.greedy_dict[agent_id]]
                 mask[self.greedy_dict[agent_id]] = False
-            self.graph_x.append(obs_dict[agent_id][:,:2])
+            # self.graph_x.append(obs_dict[agent_id][:,:2])
+            self.graph_x.append(self.belief_targets[self.greedy_dict[agent_id]].state[:2])
             state.append(obs_dict[agent_id])
         self.graph_x = np.squeeze(np.asarray(self.graph_x))
         state = np.squeeze(np.asarray(state))

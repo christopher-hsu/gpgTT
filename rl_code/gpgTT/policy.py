@@ -68,8 +68,10 @@ class Net(nn.Module):
 		#self.l3 = nn.Linear(64,2,bias=False)
 
 		self.gcn1 = GCN(8, 16, t.tanh)		#8 input features based on setTracking-vGPG
-		#self.gcn11 = GCN(16, 16, t.tanh)
+		self.gcn11 = GCN(16, 32, t.tanh)
 		#self.gcn111 = GCN(64, 32, F.relu)
+		self.gcn12 = GCN(32,16, t.tanh)
+		self.gcn12_ = GCN(32,16, t.tanh)
 		self.gcn2 = GCN(16, 2, t.tanh)
 		self.gcn2_ = GCN(16,2,t.tanh)
 
@@ -90,7 +92,9 @@ class Net(nn.Module):
 
 		x = self.gcn1(g, features)
 		#x = self.gcn1(g,x)
-		#x = self.gcn11(g,x)
+		x = self.gcn11(g,x)
+		x = self.gcn21(g,x)
+		x = self.gcn21_(g,x)
 		#x = self.gcn11(g,x)
 		#x = F.relu(self.l1(features))
 		#mu = F.relu(self.l2(x))

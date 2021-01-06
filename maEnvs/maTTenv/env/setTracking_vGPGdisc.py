@@ -187,9 +187,8 @@ class setTrackingEnvGPGdisc(maTrackingBase):
         # clip actions into vel and angvel limits and put into dict
         # action = np.clip(action, self.limit['action'][0], self.limit['action'][1])
         for ii in range(self.nb_agents):
-            action_vw = self.action_map[action[ii]]
+            action_vw = self.action_map[action[ii][0]]
             action_dict[self.agents[ii].agent_id] = action_vw
-        pdb.set_trace()
 
         # Targets move (t -> t+1)
         for n in range(self.nb_targets):

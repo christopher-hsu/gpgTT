@@ -35,7 +35,7 @@ parser.add_argument('--map', type=str, default="emptyMed")
 parser.add_argument('--nb_agents', type=int, default=4)
 parser.add_argument('--nb_targets', type=int, default=4)
 parser.add_argument('--seed', help='RNG seed', type=int, default=5)
-
+parser.add_argument('--log_dir', type=str, default='./logs/test_4a4t/')
 args = parser.parse_args()
 
 
@@ -57,7 +57,7 @@ env = envs.make('setTracking-vGPG',
 				is_training=True,
 				)
 
-filename = './logs/test_4a4t/model.pt'
+filename = args.log_dir+'model.pt'
 policy.load_state_dict(torch.load(filename))
 
 

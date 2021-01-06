@@ -52,6 +52,36 @@ def select_action(state,g,policy):
 	if len(policy.policy_history) > 0:
 		policy.policy_history = torch.cat([policy.policy_history, (log_prob.reshape(1))])
 	else:
+		pdb.set_trace()
+		policy.policy_history = log_prob.reshape(1)
+
+	return action
+
+
+def select_discrete_action(state,g,policy):
+	
+	state = Variable(torch.FloatTensor(state))
+	q_values = policy(g,state)
+	
+	action = t.argmax(q_values, dim=1, keepdim=True)
+
+	log_prob = t.gather(q_values, 1, action)
+	# sigma = F.softplus(sigma)
+
+	
+	# eps = torch.randn(mu.size())
+	# action = (mu + sigma.sqrt()*Variable(eps)).data
+	# prob = normal(action, mu, sigma)
+
+	# prob2= torch.prod(prob.reshape(-1))
+	# log_prob = prob2.log()
+
+	# Add log probability of our chosen action to our history
+	 
+	if len(policy.policy_history) > 0:
+		policy.policy_history = torch.cat([policy.policy_history, (log_prob.reshape(1))])
+	else:
+		pdb.set_trace()
 		policy.policy_history = log_prob.reshape(1)
 
 	return action

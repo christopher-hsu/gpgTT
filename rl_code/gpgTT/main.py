@@ -20,6 +20,7 @@ import networkx as nx
 import pdb
 import matplotlib.pyplot as plt
 from policy import Net
+from policy import DiscreteNet
 #from linear_policy import Net
 from make_g import build_graph
 from utils import *
@@ -37,6 +38,7 @@ parser.add_argument('--map', type=str, default="emptyMed")
 parser.add_argument('--nb_agents', type=int, default=4)
 parser.add_argument('--nb_targets', type=int, default=4)
 parser.add_argument('--seed', help='RNG seed', type=int, default=0)
+parser.add_argument('--discrete', type=int, default=0)
 
 args = parser.parse_args()
 
@@ -45,9 +47,18 @@ torch_threads=1
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 torch.set_num_threads(torch_threads)
 
+if args.discrete:
+	policy = DiscreteNet()
+	name = '_disc'
+	env_name = 'setTracking-vGPGdisc'
+else:
+	policy = Net()#.to(device)
+	name = '_cont'
+	env_name = 'setTracking-vGPG'
+
 ## maEnvs
 import envs
-env = envs.make('setTracking-vGPG',
+env = envs.make(env_name,
 				'ma_target_tracking',
 				render=bool(0),
 				record=bool(0),
@@ -59,14 +70,14 @@ env = envs.make('setTracking-vGPG',
 				is_training=True,
 				)
 
-policy = Net()#.to(device)
+
 optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 # env = gym.make('FormationFlying-v3')
 
 if not os.path.exists('./logs'):
 	os.makedirs('./logs')
 
-filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+str('_%da%dt_seed%d'%(env.nb_agents,env.nb_targets,args.seed))
+filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+name+str('_%da%dt_seed%d_'%(env.nb_agents,env.nb_targets,args.seed))
 savedir = str('./logs/%s'%filename)
 
 if not os.path.exists(savedir):
@@ -97,7 +108,10 @@ def main(episodes):
 			#if episode%50==0:
 			# env.render()
 			#g = build_graph(env)
-			action = select_action(state,g,policy)
+			if args.discrete:
+				action = select_discrete_action(state,g,policy)
+			else:
+				action = select_action(state,g,policy)
 			action = action.numpy()
 			# action = np.reshape(action,[-1])
 

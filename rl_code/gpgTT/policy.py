@@ -67,10 +67,10 @@ class Net(nn.Module):
 		#self.l2 = nn.Linear(64,2,bias=False)
 		#self.l3 = nn.Linear(64,2,bias=False)
 
-		self.gcn1 = GCN(8, 16, t.tanh)		#8 input features based on setTracking-vGPG
-		self.gcn11 = GCN(16, 32, t.tanh)
+		self.gcn1 = GCN(8, 16, t.tanh)		#8 input features based on setTracking-vGPG 
+		# self.gcn11 = GCN(16, 32, t.tanh)
 		#self.gcn111 = GCN(64, 32, F.relu)
-		self.gcn111 = GCN(32,16, t.tanh)
+		# self.gcn111 = GCN(32,16, t.tanh)
 		self.gcn2 = GCN(16, 2, t.tanh)
 		self.gcn2_ = GCN(16,2,t.tanh)
 
@@ -91,8 +91,8 @@ class Net(nn.Module):
 
 		x = self.gcn1(g, features)
 		#x = self.gcn1(g,x)
-		x = self.gcn11(g,x)
-		x = self.gcn111(g,x)
+		# x = self.gcn11(g,x)
+		# x = self.gcn111(g,x)
 		#x = self.gcn11(g,x)
 		#x = F.relu(self.l1(features))
 		#mu = F.relu(self.l2(x))
@@ -100,3 +100,32 @@ class Net(nn.Module):
 		mu = self.gcn2(g, x)
 		sigma = self.gcn2_(g,x)
 		return mu,sigma
+
+class DiscreteNet(nn.Module):
+	def __init__(self):
+		super(DiscreteNet, self).__init__()
+
+		self.logsoftmax = nn.LogSoftmax(dim=1)
+
+		self.gcn1 = GCN(8, 16, t.tanh)		#8 input features based on setTracking-vGPG 
+		self.gcn2 = GCN(16, 32, t.tanh)
+		self.gcn3 = GCN(32, 12,t.tanh)
+
+
+		self.policy_history = Variable(torch.Tensor())
+		self.reward_episode = []
+		# Overall reward and loss history
+		self.reward_history = []
+		self.loss_history = []
+		self.lr_history = []
+		self.gamma = 0.99
+
+	def forward(self, g, features):
+
+
+		x = self.gcn1(g, features)
+		x = self.gcn2(g, x)
+		x = self.gcn3(g,x)
+		q = self.logsoftmax(x)
+
+		return q

@@ -58,7 +58,9 @@ def make(env_name, render=False, figID=0, record=False, ros=False, directory='',
     elif env_name == 'setTracking-vGPG':
         from maTTenv.env.setTracking_vGPG import setTrackingEnvGPG
         env0 = setTrackingEnvGPG(num_agents=num_agents, num_targets=num_targets, **kwargs)
-
+    elif env_name == 'setTracking-vGPGdisc':
+        from maTTenv.env.setTracking_vGPGdisc import setTrackingEnvGPGdisc
+        env0 = setTrackingEnvGPGdisc(num_agents=num_agents, num_targets=num_targets, **kwargs)
     elif env_name == 'advTracking-v0':
         from maTTenv.env.advTracking_v0 import advTrackingEnv0
         env0 = advTrackingEnv0(num_agents=num_agents, num_targets=num_targets, **kwargs)

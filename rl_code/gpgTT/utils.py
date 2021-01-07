@@ -104,7 +104,7 @@ def update_policy(policy,optimizer,lr_iter):
 	#pdb.set_trace()
 
 	#Update lr rate
-	lr = 0.001*np.cos(np.pi/(2*10000000)*lr_iter)
+	lr = 0.001*np.cos(np.pi/(2*20000000)*lr_iter)
 	optimizer.param_groups[0]['lr'] = lr
 
 	# Update network weights

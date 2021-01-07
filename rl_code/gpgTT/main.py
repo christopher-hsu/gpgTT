@@ -167,7 +167,7 @@ def main(episodes):
 
 	#pdb.set_trace()
 
-episodes = 1
+episodes = 100000
 main(episodes)
 
 

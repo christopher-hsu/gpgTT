@@ -11,7 +11,7 @@ import torch.optim as optim
 import dgl
 import dgl.function as fn
 import math
-import pdb, argparse
+import pdb, argparse, pickle
 
 from torch.autograd import Variable
 from torch.distributions import Categorical
@@ -77,7 +77,7 @@ optimizer = optim.Adam(policy.parameters(), lr=1e-3)
 if not os.path.exists('./logs'):
 	os.makedirs('./logs')
 
-filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+name+str('_%da%dt_seed%d_'%(env.nb_agents,env.nb_targets,args.seed))
+filename = str(datetime.datetime.now().strftime("%m%d%H%M"))+name+str('_%da%dt_seed%d'%(env.nb_agents,env.nb_targets,args.seed))
 savedir = str('./logs/%s'%filename)
 
 if not os.path.exists(savedir):
@@ -95,6 +95,7 @@ def main(episodes):
 
 	running_reward = 10
 	plotting_rew = []
+	reward_over_time = []
 	lr_iter = 0
 
 	for episode in range(episodes):
@@ -134,6 +135,7 @@ def main(episodes):
 
 		# Used to determine when the environment is solved.
 		# running_reward = (running_reward * 0.99) + (time * 0.01)
+		reward_over_time.append(reward_over_eps)
 
 		update_policy(policy,optimizer, lr_iter)
 
@@ -153,7 +155,7 @@ def main(episodes):
 		writer.add_scalar('lr', policy.lr_history[-1],episode)
 
 
-
+	pickle.dump(reward_over_time, open(savedir+'/rewards.pkl', 'wb'))
 
 	#pdb.set_trace()
 	# np.savetxt('Relative_Goal_Reaching_for_%d_agents_rs_rg.txt' %(env.n_agents), plotting_rew)
@@ -165,7 +167,7 @@ def main(episodes):
 
 	#pdb.set_trace()
 
-episodes = 100000
+episodes = 1
 main(episodes)
 
 

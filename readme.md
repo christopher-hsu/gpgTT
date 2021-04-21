@@ -1,3 +1,11 @@
+# gpgTT
+Graph Policy Gradient for Target Tracking
+by Christopher Hsu
+
+Adapted for the multi-agent target tracking environment
+
+From,
+
 ## Graph Policy Gradients for Large Scale Robot Control
 #### In CoRL 2019, Oral Paper [[Paper]](https://arxiv.org/pdf/1907.03822.pdf)[[Video]](https://www.youtube.com/watch?v=RefiX9UCCw8)[[Blog Post]](https://devmesh.intel.com/projects/graph-policy-gradients-for-large-scale-robot-control)[[CoRL Talk]](https://youtu.be/b7StSnt85S4?t=8604)
 
